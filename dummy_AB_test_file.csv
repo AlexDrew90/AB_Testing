@@ -1,0 +1,7 @@
+﻿test_number,version,sample_size,count_desired_action
+1,A,500,7
+1,B,600,11
+2,A,1500,21
+2,B,1463,22
+3,A,10000,100
+3,B,9900,300
