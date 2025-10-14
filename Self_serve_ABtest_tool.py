@@ -19,7 +19,6 @@ def run_logsitic_regression(df):
     X = pd.get_dummies(df[['test_number','version']], drop_first=True).astype(float)
     X = sm.add_constant(X)
 
-
     model = sm.GLM(
         endog=y, 
         exog=X, 
@@ -30,13 +29,13 @@ def run_logsitic_regression(df):
     pval = results.pvalues['version_B']
     odds_ratio = np.exp(coef)
 
+
     if pval <= 0.05:
         strength = "STRONG"
     elif pval <= 0.1:
         strength = "SUFFICIENT"
     else:
         strength = "INSUFFICIENT"
-        return strength
 
     if odds_ratio >= 1:
         print(f"People who saw version B were {odds_ratio:.2f}X as likely to perform the desired action as those who saw version A.")
