@@ -45,6 +45,7 @@ def select_file():
         results = run_logsitic_regression(retrieved_df)
         coef = results.params['version_B']
         pval = results.pvalues['version_B']
+        sig = 1 -pval
         odds_ratio = np.exp(coef)
         ci_low, ci_high = results.conf_int().loc['version_B']
         ci_low_or, ci_high_or = np.exp(ci_low), np.exp(ci_high)
@@ -59,15 +60,24 @@ def select_file():
             strength = "INSUFFICIENT"
 
         if odds_ratio >= 1:
-            line2 = f"People who saw version B were {odds_ratio:.2f}X as likely to perform the desired action as those who saw version A."
+            line8 = f"95% CI: {ci_low_or:.2f}–{ci_high_or:.2f}."
         else:
-            line2 = f"People who saw version B were {1/odds_ratio:.2f}X less likely to perform the desired action than those who saw version A."
+            line2 = (f"People who saw version B were {1/odds_ratio:.2f}× less likely to "
+                    f"perform the desired action than those who saw version A.")
+            lo, hi = 1/ci_high_or, 1/ci_low_or  # invert AND reorder
+            line8 = f"95% CI: {lo:.2f}–{hi:.2f}"
 
-        line3 = f"The p-value is: {pval:.4f}. Brand & Marketing consider this {strength} evidence that the difference is statistically significant."
-
-        line1 = f"(95% CI: {1/ci_high_or:.2f}–{1/ci_low_or:.2f})."
+        
+        
+        line1 = (f"RESULTS")
+        line2 = (f"placeholder")
+        line3 = (f"Winning version:{sig:.4f}")
+        line4 = (f"TECHNICAL INFORMATION")
+        line6 = (f"p-value: {pval:.4f}")
+        line7 = (f"Odds ratio: {odds_ratio:.4f}")
+    
         # Display result in Tkinter popup
-        message = f"{line1}\n\n{line2}\n\n{line3}"
+        message = f"{line1}\n\n{line2}\n\n{line3}\n\n\n{line4}\n\n{line6}\n\n{line7}\n\n{line8}"
         messagebox.showinfo("Combined A/B Test Results", message)
 
         
@@ -112,15 +122,19 @@ frm.grid(row=0, column=0, sticky="nsew")
 ttk.Label(
     frm,
     text=(
+        "SELF-SERVE A/B TESTING TOOL"
+        "\n"
+        "--------------------------------------------------------------------"
+        "\n\n"
         "ABOUT"
         "\n\n"
         "This tool aims to provide the user with a method of combining the results of multiple A/B tests to increase the sample size (and therefore likelihood of acheiving a statistically significant result)."
         "\n\n"
-        "The tool is platform agnostic, so it can used to combine A/B tests from emails/webpages/social media posts etc...(do not mix tests from different platforms)"
+        "The tool is platform agnostic, so it can used for A/B tests carried out on emails/webpages/social media posts etc...(just don't combine tests executed on different platforms)."
         "\n\n\n"
          "HOW TO USE"
         "\n\n"
-        "After you have conducted multiple A/B tests (the control and variation the should be the same across each test). Arrange your data into the required format (example CSV file provided below)."
+        "After you have conducted multiple A/B tests (the control and variation should be the same across each test). Arrange your data into the required format (example CSV file provided below)."
         "\n\n"
         'Finally, upload your results using the "Select CSV file" button and the tool will produce a report.'
     ),
