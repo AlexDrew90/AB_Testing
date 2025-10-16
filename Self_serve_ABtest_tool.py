@@ -45,39 +45,47 @@ def select_file():
         results = run_logsitic_regression(retrieved_df)
         coef = results.params['version_B']
         pval = results.pvalues['version_B']
-        sig = 1 -pval
         odds_ratio = np.exp(coef)
         ci_low, ci_high = results.conf_int().loc['version_B']
         ci_low_or, ci_high_or = np.exp(ci_low), np.exp(ci_high)
 
-
-
-        if pval <= 0.05:
-            strength = "STRONG"
-        elif pval <= 0.1:
-            strength = "SUFFICIENT"
+        
+        if odds_ratio > 1:
+            winner = "Version B"
+        elif odds_ratio == 1:
+            winner = "No difference between versions."
         else:
-            strength = "INSUFFICIENT"
+            winner = "Version A"
 
-        if odds_ratio >= 1:
-            line8 = f"95% CI: {ci_low_or:.2f}–{ci_high_or:.2f}."
+
+        if ci_low_or < 1 < ci_high_or:
+            ci_explainer = (
+                f"The difference between versions A and B is not statistically significant."
+            )
+        elif odds_ratio > 1:
+            ci_explainer = (
+                f"We’re 95% confident that people who saw version B were between "
+                f"{ci_low_or:.2f}× and {ci_high_or:.2f}× more likely to perform the desired action."
+            )
         else:
-            line2 = (f"People who saw version B were {1/odds_ratio:.2f}× less likely to "
-                    f"perform the desired action than those who saw version A.")
-            lo, hi = 1/ci_high_or, 1/ci_low_or  # invert AND reorder
-            line8 = f"95% CI: {lo:.2f}–{hi:.2f}"
+            inv_low, inv_high = 1 / ci_high_or, 1 / ci_low_or
+            ci_explainer = (
+                f"We’re 95% confident that people who saw version B were between "
+                f"{inv_low:.2f}× and {inv_high:.2f}× less likely to perform the desired action."
+            )
 
         
         
         line1 = (f"RESULTS")
-        line2 = (f"placeholder")
-        line3 = (f"Winning version:{sig:.4f}")
+        line2 = (f"Winning version: {winner}")
+        line3 = (f"Impact: {ci_explainer}")
         line4 = (f"TECHNICAL INFORMATION")
-        line6 = (f"p-value: {pval:.4f}")
-        line7 = (f"Odds ratio: {odds_ratio:.4f}")
+        line5 = (f"p-value: {pval:.4f}")
+        line6 = (f"Odds ratio: {odds_ratio:.4f}")
+        line7 = f"95% CI of odds ratio: {ci_low_or:.2f}–{ci_high_or:.2f}."
     
         # Display result in Tkinter popup
-        message = f"{line1}\n\n{line2}\n\n{line3}\n\n\n{line4}\n\n{line6}\n\n{line7}\n\n{line8}"
+        message = f"{line1}\n\n{line2}\n\n{line3}\n\n\n{line4}\n\n{line5}\n\n{line6}\n\n{line7}"
         messagebox.showinfo("Combined A/B Test Results", message)
 
         
