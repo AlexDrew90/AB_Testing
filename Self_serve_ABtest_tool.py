@@ -6,7 +6,7 @@ import pandas as pd
 
 # Function to perform logistic regression
 
-def run_logsitic_regression(df):
+def run_logistic_regression(df):
     import statsmodels.api as sm
 
     df['version'] = df['version'].astype('category')
@@ -29,7 +29,7 @@ def run_logsitic_regression(df):
     return results
 
 
-# Function to handle file selection and pass df to run_logistic_regression functoin
+# Function to handle file selection and pass df to run_logistic_regression function
 def select_file():
     
     # Ask the user to select the CSV file via file dialog
@@ -42,47 +42,46 @@ def select_file():
         import numpy as np
         # Call the processing function and pass the file path and campaign name
         retrieved_df = pd.read_csv(file_path)
-        results = run_logsitic_regression(retrieved_df)
+        results = run_logistic_regression(retrieved_df)
         coef = results.params['version_B']
         pval = results.pvalues['version_B']
         odds_ratio = np.exp(coef)
         ci_low, ci_high = results.conf_int().loc['version_B']
         ci_low_or, ci_high_or = np.exp(ci_low), np.exp(ci_high)
+        improvement = (odds_ratio - 1) * 100
+        ci_low_pct = (ci_low_or - 1) * 100
+        ci_high_pct = (ci_high_or - 1) * 100
 
-        
-        if odds_ratio > 1:
+
+
+        if ci_low_pct > 0:
             winner = "Version B"
-        elif odds_ratio == 1:
-            winner = "No difference between versions."
-        else:
+            ci_explainer = (
+                f"We’re 95% confident that Version B made the desired outcome between "
+                f"{ci_low_pct:.1f}% and {ci_high_pct:.1f}% more likely (change in odds)."
+            )
+        elif ci_high_pct < 0:
             winner = "Version A"
-
-
-        if ci_low_or < 1 < ci_high_or:
             ci_explainer = (
-                f"The difference between versions A and B is not statistically significant."
-            )
-        elif odds_ratio > 1:
-            ci_explainer = (
-                f"We’re 95% confident that people who saw version B were between "
-                f"{ci_low_or:.2f}× and {ci_high_or:.2f}× more likely to perform the desired action."
+                f"We’re 95% confident that Version B made the desired outcome between "
+                f"{abs(ci_low_pct):.1f}% and {abs(ci_high_pct):.1f}% less likely (change in odds)."
             )
         else:
-            inv_low, inv_high = 1 / ci_high_or, 1 / ci_low_or
+            winner = "No clear winner"
             ci_explainer = (
-                f"We’re 95% confident that people who saw version B were between "
-                f"{inv_low:.2f}× and {inv_high:.2f}× less likely to perform the desired action."
+            f"We’re not confident there’s a real difference — "
+            f"the possible range goes from {ci_low_pct:.1f}% lower to {ci_high_pct:.1f}% higher."
             )
 
-        
-        
-        line1 = (f"RESULTS")
-        line2 = (f"Winning version: {winner}")
-        line3 = (f"Impact: {ci_explainer}")
-        line4 = (f"TECHNICAL INFORMATION")
-        line5 = (f"p-value: {pval:.4f}")
-        line6 = (f"Odds ratio: {odds_ratio:.4f}")
-        line7 = f"95% CI of odds ratio: {ci_low_or:.2f}–{ci_high_or:.2f}."
+
+        line1 = "RESULTS"
+        line2 = f"Winning version: {winner}"
+        line3 = f"Impact: {ci_explainer}"
+
+        line4 = "TECHNICAL INFORMATION"
+        line5 = f"p-value: {pval:.4f}"
+        line6 = f"Estimated % change in odds: {improvement:.1f}%"
+        line7 = f"95% CI (% change in odds): {ci_low_pct:.1f}% – {ci_high_pct:.1f}%"
     
         # Display result in Tkinter popup
         message = f"{line1}\n\n{line2}\n\n{line3}\n\n\n{line4}\n\n{line5}\n\n{line6}\n\n{line7}"
@@ -136,7 +135,7 @@ ttk.Label(
         "\n\n"
         "ABOUT"
         "\n\n"
-        "This tool aims to provide the user with a method of combining the results of multiple A/B tests to increase the sample size (and therefore likelihood of acheiving a statistically significant result)."
+        "This tool aims to provide the user with a method of combining the results of multiple A/B tests to increase the sample size (and therefore likelihood of achieving a statistically significant result)."
         "\n\n"
         "The tool is platform agnostic, so it can used for A/B tests carried out on emails/webpages/social media posts etc...(just don't combine tests executed on different platforms)."
         "\n\n\n"
